@@ -8,20 +8,7 @@ datasource db {
   provider = "sqlite"
 }
 
-model Usuario {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  senha String
-}
 
-model Time {
-  id          Int          @id @default(autoincrement())
-  nome        String       @unique
-  pais        String
-  tecnico     String
-  liga        String
-  personagens Personagem[]
-}
 
 model Personagem {
   id         Int    @id @default(autoincrement())
@@ -29,17 +16,14 @@ model Personagem {
   idade      Int
   posicao    String
   habilidade String
-
-  timeId     Int
-  time       Time   @relation(fields: [timeId], references: [id])
 }
 
 model Funcionario {
   id        Int    @id @default(autoincrement())
   nome      String
-  idade     Int
+  senha     String
   cpf       String @unique
   email     String @unique
   cargo     String
-  descricao String
+
 }

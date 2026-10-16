@@ -5,11 +5,7 @@ import { handleErrors } from "../helpers/handleErrors";
 export default {
     list: async (request: Request, response: Response) => {
         try {
-            const personagens = await prisma.personagem.findMany({
-                include: {
-                    time: true,
-                },
-            });
+            const personagens = await prisma.personagem.findMany();
 
             return response.status(200).json(personagens);
         } catch (e) {
@@ -25,9 +21,6 @@ export default {
                 where: {
                     id: +id,
                 },
-                include: {
-                    time: true,
-                },
             });
 
             return response.status(200).json(personagem);
@@ -38,19 +31,18 @@ export default {
 
     create: async (request: Request, response: Response) => {
         try {
-            const { nome, idade, posicao, habilidade, timeId } = request.body;
+            const { nome, idade, posicao, habilidade,} = request.body;
 
-            if (!nome || idade === undefined || !posicao || !habilidade || timeId === undefined) {
+            if (!nome || idade === undefined || !posicao || !habilidade) {
                 return response.status(400).json("Dados do personagem incompletos");
             }
 
             const personagem = await prisma.personagem.create({
                 data: {
                     nome,
-                    idade,
+                    idade: +idade,
                     posicao,
                     habilidade,
-                    timeId,
                 },
             });
 
@@ -63,7 +55,7 @@ export default {
     update: async (request: Request, response: Response) => {
         try {
             const { id } = request.params;
-            const { nome, idade, posicao, habilidade, timeId } = request.body;
+            const { nome, idade, posicao, habilidade,} = request.body;
 
             const personagem = await prisma.personagem.update({
                 where: {
@@ -71,12 +63,10 @@ export default {
                 },
                 data: {
                     nome,
-                    idade,
+                    idade: idade !== undefined ? +idade : undefined,
                     posicao,
                     habilidade,
-                    timeId,
                 },
-
             });
 
             return response.status(200).json(personagem);
@@ -86,18 +76,18 @@ export default {
     },
 
     delete: async (request: Request, response: Response) => {
-         try {
-             const { id } = request.params;
+        try {
+            const { id } = request.params;
 
-             const personagem = await prisma.personagem.delete({
-                 where: {
-                     id: +id,
-                 },
-             });
+            const personagem = await prisma.personagem.delete({
+                where: {
+                    id: +id,
+                },
+            });
 
-             return response.status(200).json(personagem);
-         } catch (e) {
-             return handleErrors(e, response);
-         }
-    }
+            return response.status(200).json(personagem);
+        } catch (e) {
+            return handleErrors(e, response);
+        }
+    },
 };
