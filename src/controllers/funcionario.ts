@@ -145,59 +145,32 @@ export default {
 login: async (request: Request, response: Response) => {
     try {
       const { email, senha } = request.body;
-      console.log("-> Tentando login com:", email);
 
       if (!email || !senha) {
         return response.status(400).json("Dados incompletos");
       }
 
-      // 1. Tenta buscar o funcionário
-      let funcionario = await prisma.funcionario.findUnique({
-        where: { email },
+      const funcionario = await prisma.funcionario.findUnique({
+        where: {
+          email,
+        },
       });
 
-      // 🚨 SE NÃO ENCONTRAR O ADMIN, CRIA ELE FORÇADO AGORA MESMO NO BANCO DO SERVIDOR:
-      if (!funcionario && email === "admin@gmail.com") {
-        console.log("⚠️ Banco lido pelo servidor estava vazio! Criando admin@gmail.com agora...");
-        funcionario = await prisma.funcionario.create({
-          data: {
-            nome: "Admin",
-            email: "admin@gmail.com",
-            cargo: "ADMIN",
-            cpf: "12345678912",
-            senha: bcrypt.hashSync("123456", 10), // Senha '123456' com hash estável de round 10
-          },
-        });
-        console.log("✅ Admin criado com sucesso no banco ativo!");
+      if (!funcionario || !bcrypt.compareSync(senha, funcionario.senha)) {
+        return response.status(404).json("Email e/ou senha inválidos");
       }
 
-      // Se mesmo tentando criar ainda não existir (para outros emails errados)
-      if (!funcionario) {
-        console.log("❌ ERRO: Usuário realmente não foi encontrado no banco de dados.");
-        return response.status(401).json("Email e/ou senha inválidos");
-      }
-
-      console.log("-> Usuário encontrado! Comparando as senhas...");
-      const senhaValida = bcrypt.compareSync(senha, funcionario.senha);
-
-      if (!senhaValida) {
-        console.log("❌ ERRO: A senha digitada não bate com o hash do banco.");
-        return response.status(401).json("Email e/ou senha inválidos");
-      }
-
-      console.log("-> Senha correta! Gerando o Token JWT...");
       const token = jwt.sign(
         { id: funcionario.id, cargo: funcionario.cargo },
         process.env.JWT_SECRET!,
-        { expiresIn: "1d" }
+        {
+          expiresIn: "1d",
+        },
       );
 
-      console.log("✅ Sucesso! Token gerado.");
-      return response.status(200).json({ token });
+      return response.status(200).json(token);
     } catch (e) {
-      console.log("🚨 CAIU NO CATCH! O erro real foi:", e);
       return handleErrors(e, response);
     }
   },
-
 };
